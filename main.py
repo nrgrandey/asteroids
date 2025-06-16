@@ -10,6 +10,7 @@ from shot import Shot
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    font = pygame.font.SysFont(None, 36)
     clock = pygame.time.Clock()
 
     updatable = pygame.sprite.Group()
@@ -26,6 +27,8 @@ def main():
 
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
 
+    score = 0
+
     dt = 0
 
     while True:
@@ -36,11 +39,21 @@ def main():
         updatable.update(dt)
 
         for asteroid in asteroids:
+            for shot in shots:
+                if asteroid.collides_with(shot):
+                    asteroid.split()
+                    shot.kill()
+                    score += ASTEROID_VALUE
+                    break
             if asteroid.collides_with(player):
                 print("Game over!")
                 sys.exit()
 
         screen.fill("black")
+
+        # Render the score
+        score_surface = font.render(f"Score: {score}", True, (255, 255, 255))
+        screen.blit(score_surface, (10, 10))  # Draw at top-left corner
 
         for obj in drawable:
             obj.draw(screen)
