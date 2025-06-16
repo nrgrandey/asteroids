@@ -28,7 +28,7 @@ def main():
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
 
     score = 0
-
+    lives = PLAYER_LIVES
     dt = 0
 
     while True:
@@ -40,20 +40,48 @@ def main():
 
         for asteroid in asteroids:
             for shot in shots:
-                if asteroid.collides_with(shot):
+                if asteroid.collides_with(shot) and not asteroid.is_explosion_piece:
                     asteroid.split()
                     shot.kill()
                     score += ASTEROID_VALUE
                     break
-            if asteroid.collides_with(player):
-                print("Game over!")
-                sys.exit()
+            if player.collides_with(asteroid) and not asteroid.is_explosion_piece:
+                lives -= 1
+                player.position = pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+                player.velocity = pygame.Vector2(0, 0)
+                # Display GAME OVER screen when lives reach 0
+                if lives <= 0:
+                    # Display GAME OVER screen
+                    game_over_surface = font.render("GAME OVER", True, (255, 0, 0))
+                    restart_surface = font.render("Press ENTER to Restart or Q to Quit", True, (255, 255, 255))
+                    screen.blit(game_over_surface, (SCREEN_WIDTH // 2 - game_over_surface.get_width() // 2, SCREEN_HEIGHT // 2 - 40))
+                    screen.blit(restart_surface, (SCREEN_WIDTH // 2 - restart_surface.get_width() // 2, SCREEN_HEIGHT // 2 + 10))
+                    pygame.display.flip()
+                    waiting = True
+                    while waiting:
+                        for event in pygame.event.get():
+                            if event.type == pygame.QUIT:
+                                pygame.quit()
+                                sys.exit()
+                            if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_KP_ENTER or event.key == pygame.K_RETURN:
+                                    # Restart the game
+                                    main()
+                                    return
+                                elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
+                                    pygame.quit()
+                                    sys.exit()
+                        clock.tick(15)
+
 
         screen.fill("black")
 
         # Render the score
         score_surface = font.render(f"Score: {score}", True, (255, 255, 255))
         screen.blit(score_surface, (10, 10))  # Draw at top-left corner
+        # Render the lives
+        lives_surface = font.render(f"Lives: {lives}", True, (255, 255, 255))
+        screen.blit(lives_surface, (10, 40))
 
         for obj in drawable:
             obj.draw(screen)
